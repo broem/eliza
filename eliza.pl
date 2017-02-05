@@ -7,7 +7,7 @@
 
 
 my $eliza = '[Eliza]';
-my $user = '[Criminal34532]';
+my $user = 'Criminal';
 my @self = ('i', 'i am', 'me', 'my');
 my @happy = ('happy', 'glad', 'joy');
 my @sad = ('sad', 'upset', 'depressed', 'anxious');
@@ -16,13 +16,14 @@ my @anger = ('angry', 'mad');
 my @random = ('hungry');
 my @sorry = ('sorry', 'apologize');
 my $annoyance = 0;
+my $crimNum = 1000 + int rand(999);
 sub rmwhite { my $i = shift; $i=~s/^\s*(.*?)\s*$/$1/; return $i};
 
 print $eliza." Welcome patient I'm Eliza, your court appointed psychotherapist.\n";
 sleep (2);
 print $eliza." Let me make sure I've got your name right, what was it again? \n";
 
-print "$user ";
+print "[$user$crimNum] ";
 $user = <>;
 #print "\n";
 
@@ -30,7 +31,7 @@ sleep (1);
 
 $user =  ucfirst(lc $user);
 chomp $user;
-print $eliza." Oh great, it's you, wonderful.\n";
+print $eliza." Oh great, it's you again, wonderful.\n";
 sleep (1);
 print "$eliza Ok $user how can the state help you today?\n";
 
@@ -53,9 +54,9 @@ while(1){
 
 	$input=~s/[.?!]//;
 	#remove some colloquial things
+	if(length($input) ge 5) {
 	$input=~s/^(\bok\b|\byeah\b|\byes\b|\bno\b|\bwell\b)//;
-	$tes = length($input);
-	print("$tes\n");
+	}
 
 	# if(length($input) ge 40) {
 	# 	$input = "Either you shorten your sentences or I'm leaving.\n I do not get paid to read these long diatribes.";
@@ -120,7 +121,7 @@ while(1){
 	}
 
 	if($input=~m/\bangry\b|\bsad\b|\bupset\b|\bdepressed\b|\banxious\b/) {
-		$input= "its ok to be $&, why do you think you are";
+		$input= "its ok to be $&, tell me more.";
 	}
 
 	if($input=~m/\bhelp\b/) {
@@ -144,7 +145,7 @@ while(1){
 
 	$input = rmwhite($input);
 	$input = ucfirst $input;
-	if($input ne "")
+	if($input ne "" or !$input=~m/\./)
 	{
 		$input .= "?"
 	}
