@@ -4,20 +4,23 @@
 #Benjamin Leach
 #CMSC
 
+# Sample input:
+#
+#
+#
+#
+#
+
 
 
 my $eliza = '[Eliza]';
 my $user = 'Criminal';
-my @self = ('i', 'i am', 'me', 'my');
-my @happy = ('happy', 'glad', 'joy');
-my @sad = ('sad', 'upset', 'depressed', 'anxious');
-# ok should be a special case?
-my @anger = ('angry', 'mad'); 
-my @random = ('hungry');
-my @sorry = ('sorry', 'apologize');
+my $prev = "";
 my $annoyance = 0;
 my $crimNum = 1000 + int rand(999);
-sub rmwhite { my $i = shift; $i=~s/^\s*(.*?)\s*$/$1/; return $i};
+
+# removes whitespace
+sub rmwhite { my $i = shift; $i=~s/^\s*(.*?)\s*$/$1/; return $i}; # the shift here takes in the first argument it was passed 
 
 print $eliza." Welcome patient I'm Eliza, your court appointed psychotherapist.\n";
 sleep (2);
@@ -25,7 +28,7 @@ print $eliza." Let me make sure I've got your name right, what was it again? \n"
 
 print "[$user$crimNum] ";
 $user = <>;
-#print "\n";
+
 
 sleep (1);
 
@@ -40,11 +43,12 @@ while(1){
 	my $randomNum = 1 + int rand(10); #random number for automated responses
 	my $input = "";
 	$input = <>;
+
 	my $additional="";
 	my $notFound = 1; 		# if no match default response
 	my $changeBypass = 1; 	# when there is a preloaded response that has a key word, this will bypass
 	my $noQmark = 1;
-
+	my $skip = 1; 			# skips everyting
 	
 	chomp $input;
 	$input = rmwhite($input); 		#remove the trailing and preceeding whitespace
@@ -53,6 +57,13 @@ while(1){
 	
 	my $len = length($input);
 
+	# check for repitition 
+	if($prev eq $input) {
+		$skip = 0;
+	}
+
+	$prev = $input;
+
 	# remove and replace Pronouns to change later
 	$input=~s/\byou are\b/bleach5/g;
 	$input=~s/\byou\b/bleach1/g;
@@ -60,10 +71,25 @@ while(1){
 	$input=~s/\byours\b/bleach3/g;
 	$input=~s/\byourself\b/bleach4/g;
 
+	$input=~s/[.?!]//;
 
+	#remove some beginning things
+	if($len > 5) {
+	$input=~s/^(\bok\b|\byeah\b|\byes\b|\bno\b|\bwell\b)//g;
+	}
+
+	# typing long sentences for a stressed psych
+	if(length($input) > 45) {
+		$input = "I do not get paid to read these long diatribes, let's keep it short ok?";
+		$notFound = 0;
+		$changeBypass = 0;
+	}
+
+	# dont talk about eliza
 	if($input=~m/\beliza\b/) {
 		$changeBypass = 0;
 		$notFound = 0;
+		$annoyance++;
 		if($randomNum < 3) {
 			$input="We're not here to discuss me, got it";
 		}
@@ -71,21 +97,10 @@ while(1){
 			$noQmark = 0;
 			$input="This is a place to talk about yourself, let's keep it that way."
 		}
-		if($randomNum > 6) {
-			$input="Listen, last time I checked I wasn't the one in need of a psyc, don't talk about me."
+		if($randomNum > 6 or $annoyance > 3) {
+			$noQmark = 0;
+			$input="Listen, don't talk about me."
 		}
-	}
-
-	$input=~s/[.?!]//;
-	#remove some beginning colloquial things
-	if($len > 5) {
-	$input=~s/^(\bok\b|\byeah\b|\byes\b|\bno\b|\bwell\b)//g;
-	}
-
-	if(length($input) > 45) {
-		$input = "I do not get paid to read these long diatribes, let's keep it short ok";
-		$notFound = 0;
-		$changeBypass = 0;
 	}
 
 	if($input=~m/\bguess\b/g){
@@ -98,13 +113,12 @@ while(1){
 		$notFound = 0;
 		$changeBypass = 0;
 		$noQmark = 0;
+		$annoyance--;
 		$input = "Don't apologize. Continue.";
 	}
 
-	# why dont we start from the beginning
-
 	# make eliza so unhappy she quits
-	if($input=~m/^(\byes\b|\bno\b|\bnope\b|\byep\b|\byeah\b)$/ and $changeBypass == 1){
+	if($input=~m/^(\byes\b|\bno\b|\bnope\b|\byep\b|\byeah\b|\bsure\b)$/ and $changeBypass == 1){
 		$notFound = 0;
 		if($randomNum <= 5 and $annoyance < 3) {
 			$input= "...could you elaborate"; 
@@ -113,7 +127,7 @@ while(1){
 			$input= "can you please explain yourself";
 			$annoyance++;}
 		if($annoyance >= 5) {
-			print "Ok this session is over! Enjoy your prison stay.";
+			print "You are so annoying! This session is over! Enjoy your prison stay, scum.";
 			last;
 		}
 		if($annoyance >= 3) {
@@ -160,11 +174,15 @@ while(1){
 	# end of section
 
 	if($input=~m/\bleave\b|\bquit\b|\b"end this"\b/) {
+		$annoyance--; # shes a little less annoyed by you wanting to leave
+		$notFound = 0;
+		$input = $&;
 		$additional = "If you want to leave just say quit.";
 	}
 
-	if($input=~m/^(hm+)$/) {
+	if($input=~m/^hm+$/) {
 		$noQmark = 0;
+		$notFound = 0;
 		$input = "My time is valuable, don't waste it.";
 	}
 
@@ -178,7 +196,7 @@ while(1){
 	}
 
 	# remove yes and ok
-	if($input=~m/\b(yes|ok)\b/g and $changeBypass == 1){
+	if($input=~m/\b(yes|ok|yeah|yep)\b/g and $changeBypass == 1){
 		$notFound = 0;
 		$input=~s/$&//;
 	}
@@ -191,7 +209,8 @@ while(1){
 
 	if($input=~m/\bangry\b|\bsad\b|\bupset\b|\bdepressed\b|\banxious\b/) {
 		$notFound = 0;
-		$input= "its ok to be $&, tell me more.";
+		$noQmark = 0;
+		$input= "tell me more..."; # eliza says this a lot
 	}
 
 	if($input=~m/\bhelp\b/) {
@@ -202,47 +221,72 @@ while(1){
 	if($input=~m/\+|\-|\=|\*/) {
 		$noQmark = 0;
 		$notFound = 0;
-		$input = "If this is math, I'm not a calculator. Act responsibly or I WILL cut your time short!";
+		$annoyance++;
+		$input = "I'm not a calculator. Act responsibly or I WILL cut your time short!";
 	}
 
 	if($input=~m/^quit$/){
-		#sleep(2);
+		sleep(2);
 		print "$eliza Finally! I don't get paid enough for this, bye.";
 		last;
+	}
+
+	if($input=~m/he|she|they|boyfriend|girlfriend|mom|dad|mother|father|this|that|thing|world|very/g and $notFound == 1) {
+		$notFound = 0;
+		$noQmark = 0;
+		
+		if($randomNum < 2) {
+			$input = "That's almost interesting, tell me a bit more.";
+		}
+
+		if($randomNum >=2 and $randomNum < 4) {
+			$input = "neato, go on if you must.";
+		}
+
+		if($randomNum <= 6 and $randomNum >=4) {
+			$input = "...ok. Go on.";
+		}
+
+		if($randomNum > 6) {
+			$input = "wow, you don't say, go on...";
+		}
 	}
 
 	#if doesnt ultimately understand
 	if($notFound == 1){
 		$said = $input;
 		$noQmark = 0;
+
 		if($randomNum < 3) {
 			$input="I don't know what $said means, explain.";
 		}
 		if($randomNum > 3 and $randomNum < 6) {
 			$input="I'm not following you, can you explain differently.";
 		}
-		if($randomNum >= 6){
+		if($randomNum > 6){
 			$input="English is not my first language, reword that.";
 		}
-
-		#$input="I think you're meds are wearing off...can you try again"
+		if($randomNum == 6) {
+			$input="I think you're meds are wearing off...can you try again?"
+		}
 	}
-	# things to remove: because, 
-	#i dont get paid enough to play these games
 
-	
-
+	# remove whitespace at end incase left with nothing
 	$input = rmwhite($input);
 	if($input eq ""){
 		$input = "well";
 	}
 
-
-
-	$input = ucfirst $input;
 	if($noQmark == 1) {
 		$input .= "?"
 	}
+
+	if($skip == 0) {
+		$input = "I saw you the first time. Don't repeat youself!";
+	}
+
+	$input = ucfirst $input;
+	
 	#sleep(2);
 	print "$eliza $input $additional\n";
 }
