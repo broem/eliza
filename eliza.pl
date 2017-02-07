@@ -1,15 +1,32 @@
-#!C:/Strawberry/perl -w
+#!C:\Strawberry\perl\bin -w
 
 #eliza.pl
 #Benjamin Leach
-#CMSC
+#CMSC-416
+
+#NOTE: my linux machine died, my windows machine cannot run a VM, I assume the 
+#above include is correct. 
+
 
 # Sample input:
-#
-#
-#
-#
-#
+#[Eliza] Welcome patient I'm Eliza, your court appointed psychotherapist.
+#[Eliza] Let me make sure I've got your name right, what was it again?
+#[Criminal1489] ben
+#[Eliza] Oh great, it's you again, wonderful.
+#[Eliza] Ok Ben how can the state help you today?
+#[Ben] i want out
+#[Eliza] You want out?
+#[Ben] this place is scary
+#[Eliza] Wow, you don't say, go on...
+#[Ben] everyone here is mean
+#[Eliza] That's almost interesting, tell me a bit more.
+#[Ben] fugjk
+#[Eliza] I don't know what fugjk means, explain.
+#...
+#[Ben] how do i leave this place?
+#[Eliza] Leave? If you want to leave just say quit.
+#[Ben] QUIT!
+#[Eliza] Finally! I don't get paid enough for this, bye.
 
 
 
@@ -127,6 +144,7 @@ while(1){
 			$input= "can you please explain yourself";
 			$annoyance++;}
 		if($annoyance >= 5) {
+			sleep(3);
 			print "You are so annoying! This session is over! Enjoy your prison stay, scum.";
 			last;
 		}
@@ -140,14 +158,14 @@ while(1){
 	# Pronoun section 
 	if($changeBypass == 1) {
 
-		if($input=~m/\b(i am)\b|\b(im)\b|\b(i'm)\b/g) {
+		if($input=~m/\b(i am)\b|\bim\b|\b(i'm)\b/g) {
 			$notFound = 0;
-			$input=~s/$&/you're/g;
+			$input=~s/\b$&\b/you're/g;
 		}
 
 		if($input=~m/\bmy\b/) {
 			$notFound = 0;
-			$input=~s/$&/your/g;
+			$input=~s/\b$&\b/your/g;
 		}
 		
 		if($input=~m/(\bi\b|\bme\b)/g) {
@@ -173,6 +191,21 @@ while(1){
 	}
 	# end of section
 
+	# restructure for wants and needs
+	my $part = "why do you think you";
+	
+	$input=~s/(.*)\bcan\b(.*)/$part can$2/;
+	$input=~s/(.*)\bwant\b(.*)/$part want$2/;
+	$input=~s/(.*)\bneed\b(.*)/$part need$2/;
+	#$input=~s/(.*)\bcan't\b(.*)/why do you think you can't$2/;
+	$input=~s/(.*)\bmust\b(.*)/$part must$2/;
+
+	# getting the wishes and desires in
+	if($input=~m/\bcrave(s)?\b|desire|wish|hunger|thirst|greed|appetite|lust|ache|yearn|hope/){
+		$input = "well, lets discuss this \"$&\"";
+	}
+
+
 	if($input=~m/\bleave\b|\bquit\b|\b"end this"\b/) {
 		$annoyance--; # shes a little less annoyed by you wanting to leave
 		$notFound = 0;
@@ -180,16 +213,19 @@ while(1){
 		$additional = "If you want to leave just say quit.";
 	}
 
+	# eliza likes to get to the point hmms are not permitted
 	if($input=~m/^hm+$/) {
 		$noQmark = 0;
 		$notFound = 0;
 		$input = "My time is valuable, don't waste it.";
 	}
 
+	# remove at beginning 
 	if($input=~m/^\bbecause\b/ and $changeBypass == 1){
 		$input=~s/$&//g;
 	}
 
+	# generic feels get a generic response
 	if($input=~m/\bfeel\b/g){
 		$notFound = 0;
 		$input = "Why do you think you feel this way";
@@ -231,6 +267,7 @@ while(1){
 		last;
 	}
 
+	# some common words should get a response, can run into trouble here
 	if($input=~m/he|she|they|boyfriend|girlfriend|mom|dad|mother|father|this|that|thing|world|very/g and $notFound == 1) {
 		$notFound = 0;
 		$noQmark = 0;
@@ -252,7 +289,7 @@ while(1){
 		}
 	}
 
-	#if doesnt ultimately understand
+	# if doesnt ultimately understand
 	if($notFound == 1){
 		$said = $input;
 		$noQmark = 0;
@@ -287,7 +324,7 @@ while(1){
 
 	$input = ucfirst $input;
 	
-	#sleep(2);
+	sleep(2);
 	print "$eliza $input $additional\n";
 }
 
